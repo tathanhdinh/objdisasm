@@ -1,0 +1,10 @@
+[package]
+name = "disasm"
+version = "0.1.0"
+authors = ["Ta Thanh Dinh <tathanhdinh@gmail.com>"]
+
+[dependencies]
+capstone = "0.4.0"
+failure = "0.1.2"
+lazy_static = "1.1.0"
+structopt = "0.2.10"
