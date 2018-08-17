@@ -1,4 +1,4 @@
-use std::{result, io as stdio};
+use std::{io as stdio, result};
 
 use capstone::Error as CsError;
 use failure::Fail;
@@ -12,4 +12,13 @@ pub(crate) enum Error {
 
     #[fail(display = "IO error: {}", _0)]
     Io(#[cause] stdio::Error),
+
+    #[fail(display = "Application error: {}", _0)]
+    Application(String),
+}
+
+macro_rules! application_error {
+    ($msg:expr) => {
+        Error::Application(String::from($msg))
+    };
 }
