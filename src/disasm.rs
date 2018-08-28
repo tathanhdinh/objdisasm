@@ -1,26 +1,24 @@
 use ansi_term::Colour;
 use capstone::{Capstone, Insn};
-use std::io::{self, BufWriter, Stdout, Write};
+use std::io::{self, BufWriter, Write};
 use tabwriter::TabWriter;
 
 use args::DisasmArg;
 use error::{Error, Result};
 
-pub(self) struct Printer {
-    writer: TabWriter<BufWriter<Stdout>>,
+pub(self) struct Printer<Bw: Write> {
+    writer: TabWriter<Bw>,
     verbosity: u8,
     inst_strings: Vec<String>,
 }
 
-impl Printer {
-    fn new(verbosity: u8) -> Self {
-        let writer = {
-            let stdout = io::stdout();
-            let stdout = BufWriter::new(stdout);
-            TabWriter::new(stdout)
-        };
+impl<Bw> Printer<Bw>
+where
+    Bw: Write,
+{
+    fn new(verbosity: u8, out: Bw) -> Self {
         Printer {
-            writer,
+            writer: TabWriter::new(out),
             verbosity,
             inst_strings: vec![],
         }
@@ -87,9 +85,13 @@ impl<'a> Disassembler<'a> {
     }
 
     pub fn disasm(&mut self, code: &[u8], address: u64) -> Result<()> {
-        let mut printer = Printer::new(self.verbosity);
+        let stdout = io::stdout();
+        let stdout = BufWriter::new(stdout.lock());
+        let mut printer = Printer::new(self.verbosity, stdout);
+
         let insts = self.cs.disasm_all(code, address).map_err(Error::Capstone)?;
         insts.iter().try_for_each(|i| printer.queue(&i))?;
+
         printer.show()
     }
 }

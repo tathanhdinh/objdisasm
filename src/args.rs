@@ -135,45 +135,34 @@ lazy_static! {
         SUPPORTED_ARCHS.iter().for_each(|arch| {
             match arch {
                 CsArch::X86 => {
-                    // let x = X86ArchMode::iter().map(|e| e.to_string());
-                    // let x: Vec<_> = X86ArchMode::iter().map(|e| e.as_static()).collect();
-                    // value_strings.extend_from_slice(&["x16", "x32", "x64", "x16att", "x32att", "x64att"]);
                     add_arch_names!(value_strings, X86ArchMode::iter());
-                    // value_strings.extend_from_slice(&X86ArchMode::iter().map(|e| e.as_static()).collect::<Vec<_>>());
                 },
 
                 CsArch::ARM => {
-                    // value_strings.extend_from_slice(&["arm", "armbe", "thumb", "thumbbe", "cortexm"]);
                     add_arch_names!(value_strings, ArmArchMode::iter());
                 },
 
                 CsArch::ARM64 => {
-                    // value_strings.extend_from_slice(&["arm64", "arm64be"]);
                     add_arch_names!(value_strings, Arm64ArchMode::iter());
                 },
 
                 CsArch::MIPS => {
-                    // value_strings.extend_from_slice(&["mips", "mipsbe", "mips64", "mips64be"]);
                     add_arch_names!(value_strings, MipsArchMode::iter());
                 },
 
                 CsArch::PPC => {
-                    // value_strings.extend_from_slice(&["ppc64", "ppc64be"]);
                     add_arch_names!(value_strings, PpcArchMode::iter());
                 },
 
                 CsArch::SPARC => {
-                    // value_strings.extend_from_slice(&["sparc"]);
                     add_arch_names!(value_strings, SparcArchMode::iter());
                 },
 
                 CsArch::SYSZ => {
-                    // value_strings.extend_from_slice(&["systemz"]);
                     add_arch_names!(value_strings, SystemZArchMode::iter());
                 },
 
                 CsArch::XCORE => {
-                    // value_strings.extend_from_slice(&["xcore"]);
                     add_arch_names!(value_strings, XCoreArchMode::iter());
                 },
             }
@@ -209,14 +198,14 @@ lazy_static! {
     };
 }
 
-// static DEFAULT_MODE_NAME: &'static str = "x64";
 fn try_parse_number(num_str: &str) -> Result<u64> {
-    if num_str
-        .find(|c| match c {
-            '0'...'9' => false,
-            _ => true,
-        }).is_some()
-    {
+    // TODO: reimplement
+    if num_str.find(|c: char| !c.is_ascii_digit()).is_some() {
+        let num_str = &num_str
+            .chars()
+            .filter(|c| c.is_ascii_digit())
+            .collect::<String>()[..];
+
         u64::from_str_radix(num_str, 16).map_err(|_| {
             application_error!(format!("{} is not a valid hexadecimal number", num_str))
         })
@@ -229,7 +218,10 @@ fn try_parse_number(num_str: &str) -> Result<u64> {
 #[derive(StructOpt)]
 #[structopt(name = "disasm", raw(about = "ABOUT_MESSAGE.as_str()"))]
 struct Arg {
-    #[structopt(name = "assembly", help = "Assembly hex string")]
+    #[structopt(
+        name = "assembly",
+        help = "Assembly hex string or read from stdin"
+    )]
     hex_asm: Option<String>,
 
     // ref: https://bit.ly/2MuWga7
@@ -287,15 +279,17 @@ pub(crate) struct DisasmArg {
 
 impl DisasmArg {
     pub fn new() -> Result<Self> {
+        const DEFAULT_INPUT_SIZE: usize = 1024;
+
         // ref: Convert string of hex into vector of bytes. https://bit.ly/2PcO3pG
         fn parse_assembly(hex_asm: &str) -> Vec<u8> {
             let mut hex_bytes = hex_asm
                 .as_bytes()
                 .iter()
                 .filter_map(|b| match b {
-                    &b'0'...b'9' => Some(b - b'0'),
-                    &b'a'...b'f' => Some(b - b'a' + 10),
-                    &b'A'...b'F' => Some(b - b'A' + 10),
+                    b'0'...b'9' => Some(b - b'0'),
+                    b'a'...b'f' => Some(b - b'a' + 10),
+                    b'A'...b'F' => Some(b - b'A' + 10),
                     _ => None,
                 }).fuse();
 
@@ -314,15 +308,17 @@ impl DisasmArg {
         }
 
         let arg = Arg::from_args();
+
         let arch_mode = ALL_ARCH_MODE_COMBINATIONS
             .get(&arg.arch_mode[..])
-            .ok_or(application_error!("Unsupported <arch+mode>"))?;
+            .ok_or_else(|| application_error!("Unsupported <arch+mode>"))?;
+
         let assembly = {
             if let Some(ref hex_asm) = arg.hex_asm {
                 parse_assembly(hex_asm)
             } else {
                 let stdin = stdio::stdin();
-                let mut buf = Vec::with_capacity(1024);
+                let mut buf = Vec::with_capacity(DEFAULT_INPUT_SIZE);
                 stdin.lock().read_to_end(&mut buf).map_err(Error::Io)?;
                 buf
             }
