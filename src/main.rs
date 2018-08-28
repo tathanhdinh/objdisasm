@@ -1,5 +1,7 @@
+extern crate ansi_term;
 extern crate capstone;
 extern crate strum;
+extern crate tabwriter;
 
 #[macro_use]
 extern crate structopt;
@@ -18,8 +20,7 @@ mod args;
 mod disasm;
 
 fn main() -> error::Result<()> {
-    // println!("Hello, world!");
-    let cfg = args::DisasmArg::new()?;
-    let dm = disasm::Disassembler::new(&cfg)?;
-    Ok(())
+    let arg = args::DisasmArg::new()?;
+    let mut dm = disasm::Disassembler::new(&arg)?;
+    dm.disasm(&arg.assembly, arg.address)
 }

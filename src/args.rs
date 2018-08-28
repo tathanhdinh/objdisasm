@@ -205,24 +205,38 @@ lazy_static! {
 
     static ref ABOUT_MESSAGE: String = {
         let (major_ver, minor_ver) = Capstone::lib_version();
-        format!("A better objdump (using Capstone disassembler engine v{}.{})", major_ver, minor_ver)
+        format!("A simple objdump (using Capstone disassembler engine v{}.{})", major_ver, minor_ver)
     };
 }
 
 // static DEFAULT_MODE_NAME: &'static str = "x64";
+fn try_parse_number(num_str: &str) -> Result<u64> {
+    if num_str
+        .find(|c| match c {
+            '0'...'9' => false,
+            _ => true,
+        }).is_some()
+    {
+        u64::from_str_radix(num_str, 16).map_err(|_| {
+            application_error!(format!("{} is not a valid hexadecimal number", num_str))
+        })
+    } else {
+        u64::from_str_radix(num_str, 10)
+            .map_err(|_| application_error!(format!("{} is not a valid decimal number", num_str)))
+    }
+}
 
 #[derive(StructOpt)]
 #[structopt(name = "disasm", raw(about = "ABOUT_MESSAGE.as_str()"))]
 struct Arg {
-    #[structopt(name = "hex", long = "hex", help = "assembly hex string")]
+    #[structopt(name = "assembly", help = "Assembly hex string")]
     hex_asm: Option<String>,
 
     // ref: https://bit.ly/2MuWga7
     #[structopt(
-        name = "<arch+mode>",
+        name = "arch+mode",
         short = "m",
-        long = "am",
-        help = "disassembly architecture and mode combination",
+        help = "Disassembly architecture and mode combination",
         raw(
             possible_values = "&SUPPORTED_ARCH_MODE_NAMES",
             case_insensitive = "false"
@@ -235,12 +249,28 @@ struct Arg {
         name = "base_address",
         short = "a",
         long = "address",
-        help = "base address"
+        default_value = "0",
+        parse(try_from_str = "try_parse_number"),
+        help = "Base address (hex or decimal)"
     )]
     address: u64,
 
-    #[structopt(name = "verbosity", short = "v", long = "verbose")]
-    verbosity: bool,
+    #[structopt(
+        name = "show_detail",
+        short = "d",
+        long = "detail",
+        help = "Show instruction detail"
+    )]
+    detail: bool,
+
+    #[structopt(
+        name = "verbosity",
+        short = "v",
+        long = "verbose",
+        parse(from_occurrences),
+        help = "Verbosity"
+    )]
+    verbosity: u8,
 }
 
 pub(crate) struct DisasmArg {
@@ -249,8 +279,9 @@ pub(crate) struct DisasmArg {
     pub extra_mode: Option<CsExtraMode>,
     pub endian: Option<CsEndian>,
     pub syntax: Option<CsSyntax>,
-    pub base_address: u64,
-    pub verbosity: bool,
+    pub address: u64,
+    pub detail: bool,
+    pub verbosity: u8,
     pub assembly: Vec<u8>,
 }
 
@@ -263,8 +294,8 @@ impl DisasmArg {
                 .iter()
                 .filter_map(|b| match b {
                     &b'0'...b'9' => Some(b - b'0'),
-                    &b'a'...b'f' => Some(b - b'a'),
-                    &b'A'...b'F' => Some(b - b'A'),
+                    &b'a'...b'f' => Some(b - b'a' + 10),
+                    &b'A'...b'F' => Some(b - b'A' + 10),
                     _ => None,
                 }).fuse();
 
@@ -303,7 +334,8 @@ impl DisasmArg {
             extra_mode: arch_mode.2,
             endian: arch_mode.3,
             syntax: arch_mode.4,
-            base_address: arg.address,
+            address: arg.address,
+            detail: arg.detail,
             verbosity: arg.verbosity,
             assembly,
         })
