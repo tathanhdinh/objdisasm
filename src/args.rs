@@ -126,53 +126,63 @@ enum XCoreArchMode {
 }
 
 lazy_static! {
-    pub(crate) static ref SUPPORTED_ARCHS: Vec<CsArch> =
-        select_supported_archs![CsArch::X86, CsArch::ARM, CsArch::ARM64, CsArch::MIPS,
-                                CsArch::PPC, CsArch::SPARC, CsArch::SYSZ, CsArch::XCORE];
-
+    pub(crate) static ref SUPPORTED_ARCHS: Vec<CsArch> = select_supported_archs![
+        CsArch::X86,
+        CsArch::ARM,
+        CsArch::ARM64,
+        CsArch::MIPS,
+        CsArch::PPC,
+        CsArch::SPARC,
+        CsArch::SYSZ,
+        CsArch::XCORE
+    ];
     static ref SUPPORTED_ARCH_MODE_NAMES: Vec<&'static str> = {
         let mut value_strings = vec![];
-        SUPPORTED_ARCHS.iter().for_each(|arch| {
-            match arch {
-                CsArch::X86 => {
-                    add_arch_names!(value_strings, X86ArchMode::iter());
-                },
+        SUPPORTED_ARCHS.iter().for_each(|arch| match arch {
+            CsArch::X86 => {
+                add_arch_names!(value_strings, X86ArchMode::iter());
+            }
 
-                CsArch::ARM => {
-                    add_arch_names!(value_strings, ArmArchMode::iter());
-                },
+            CsArch::ARM => {
+                add_arch_names!(value_strings, ArmArchMode::iter());
+            }
 
-                CsArch::ARM64 => {
-                    add_arch_names!(value_strings, Arm64ArchMode::iter());
-                },
+            CsArch::ARM64 => {
+                add_arch_names!(value_strings, Arm64ArchMode::iter());
+            }
 
-                CsArch::MIPS => {
-                    add_arch_names!(value_strings, MipsArchMode::iter());
-                },
+            CsArch::MIPS => {
+                add_arch_names!(value_strings, MipsArchMode::iter());
+            }
 
-                CsArch::PPC => {
-                    add_arch_names!(value_strings, PpcArchMode::iter());
-                },
+            CsArch::PPC => {
+                add_arch_names!(value_strings, PpcArchMode::iter());
+            }
 
-                CsArch::SPARC => {
-                    add_arch_names!(value_strings, SparcArchMode::iter());
-                },
+            CsArch::SPARC => {
+                add_arch_names!(value_strings, SparcArchMode::iter());
+            }
 
-                CsArch::SYSZ => {
-                    add_arch_names!(value_strings, SystemZArchMode::iter());
-                },
+            CsArch::SYSZ => {
+                add_arch_names!(value_strings, SystemZArchMode::iter());
+            }
 
-                CsArch::XCORE => {
-                    add_arch_names!(value_strings, XCoreArchMode::iter());
-                },
+            CsArch::XCORE => {
+                add_arch_names!(value_strings, XCoreArchMode::iter());
             }
         });
         value_strings
     };
-
-    static ref ALL_ARCH_MODE_COMBINATIONS:
-        HashMap<&'static str,
-                (CsArch, CsMode, Option<CsExtraMode>, Option<CsEndian>, Option<CsSyntax>)> = {
+    static ref ALL_ARCH_MODE_COMBINATIONS: HashMap<
+        &'static str,
+        (
+            CsArch,
+            CsMode,
+            Option<CsExtraMode>,
+            Option<CsEndian>,
+            Option<CsSyntax>
+        ),
+    > = {
         hashmap! {
             X86ArchMode::x16.as_static() => (CsArch::X86, CsMode::Mode16, None, None, Some(CsSyntax::Intel)),
             X86ArchMode::x16att.as_static() => (CsArch::X86, CsMode::Mode16, None, None, Some(CsSyntax::Att)),
@@ -191,10 +201,12 @@ lazy_static! {
             Arm64ArchMode::arm64be.as_static() => (CsArch::ARM64, CsMode::Arm, None, Some(CsEndian::Big), None),
         }
     };
-
     static ref ABOUT_MESSAGE: String = {
         let (major_ver, minor_ver) = Capstone::lib_version();
-        format!("A simple objdump (using Capstone disassembler engine v{}.{})", major_ver, minor_ver)
+        format!(
+            "A simple objdump (using Capstone disassembler engine v{}.{})",
+            major_ver, minor_ver
+        )
     };
 }
 

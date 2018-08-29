@@ -58,7 +58,7 @@ where
 
     fn show(&mut self) -> Result<()> {
         let all_inst_strings = self.inst_strings.join("\n");
-        writeln!(self.writer, "{}", &all_inst_strings);
+        writeln!(self.writer, "{}", &all_inst_strings).map_err(Error::Io)?;
         self.writer.flush().map_err(Error::Io)
     }
 }
