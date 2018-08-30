@@ -1,14 +1,14 @@
 use std::{io as stdio, result};
 
-use capstone::Error as CsError;
 use failure::Fail;
+use zydis::ZydisError;
 
 pub(crate) type Result<T> = result::Result<T, Error>;
 
 #[derive(Fail, Debug)]
 pub(crate) enum Error {
-    #[fail(display = "Capstone error: {}", _0)]
-    Capstone(#[cause] CsError),
+    #[fail(display = "Zydis error: {}", _0)]
+    Zydis(#[cause] ZydisError),
 
     #[fail(display = "IO error: {}", _0)]
     Io(#[cause] stdio::Error),

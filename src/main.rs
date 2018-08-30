@@ -1,7 +1,8 @@
 extern crate ansi_term;
-extern crate capstone;
+extern crate maplit;
 extern crate strum;
 extern crate tabwriter;
+extern crate zydis;
 
 #[macro_use]
 extern crate structopt;
@@ -11,8 +12,6 @@ extern crate failure;
 extern crate lazy_static;
 #[macro_use]
 extern crate strum_macros;
-#[macro_use]
-extern crate maplit;
 
 #[macro_use]
 mod error;
