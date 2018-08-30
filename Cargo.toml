@@ -1,5 +1,5 @@
 [package]
-name = "disasm"
+name = "cdisasm"
 version = "0.1.0"
 authors = ["Ta Thanh Dinh <tathanhdinh@gmail.com>"]
 

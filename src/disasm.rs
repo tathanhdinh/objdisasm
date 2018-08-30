@@ -46,8 +46,8 @@ where
 
             match self.verbosity {
                 0 => format!("{}", inst_str),
-                1 => format!("0x{:016x}\t{}", inst.address(), inst_str),
-                _ => format!("0x{:016x}\t{}\t{}", inst.address(), inst_bytes, inst_str),
+                1 => format!("0x{:x}\t{}", inst.address(), inst_str),
+                _ => format!("0x{:x}\t{}\t{}", inst.address(), inst_bytes, inst_str),
             }
         };
 
