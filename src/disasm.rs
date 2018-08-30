@@ -18,7 +18,7 @@ where
 {
     fn new(verbosity: u8, out: Bw) -> Self {
         Printer {
-            writer: TabWriter::new(out),
+            writer: TabWriter::new(out).padding(4),
             verbosity,
             inst_strings: vec![],
         }
@@ -47,7 +47,7 @@ where
             match self.verbosity {
                 0 => format!("{}", inst_str),
                 1 => format!("0x{:016x}\t{}", inst.address(), inst_str),
-                _ => format!("0x{:016x}\t{:45}\t{}", inst.address(), inst_bytes, inst_str),
+                _ => format!("0x{:016x}\t{}\t{}", inst.address(), inst_bytes, inst_str),
             }
         };
 
