@@ -1,4 +1,5 @@
 #![allow(non_camel_case_types)]
+use zydis;
 use zydis::gen as zydisc;
 
 use structopt::StructOpt;
@@ -33,10 +34,10 @@ lazy_static! {
         value_strings
     };
     static ref ABOUT_MESSAGE: String = {
-        let zydis_version = unsafe { zydisc::ZydisGetVersion() };
+        let (major, minor, patch, build) = zydis::get_version();
         format!(
-            "A simple objdump (using Zydis disassembler library v{})",
-            zydis_version
+            "A simple objdump (using Zydis disassembler library v{}.{}.{}.{})",
+            major, minor, patch, build
         )
     };
 }

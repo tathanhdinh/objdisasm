@@ -1,5 +1,5 @@
 [package]
-name = "rdisasm"
+name = "zdisasm"
 version = "0.1.0"
 authors = ["Ta Thanh Dinh <tathanhdinh@gmail.com>"]
 
@@ -13,3 +13,4 @@ maplit = "1.0.1"
 tabwriter = "1.1.0"
 ansi_term = "0.11.0"
 zydis = { git = "https://github.com/zyantific/zydis-rs.git", branch = "master" }
+# zydis = { git = "https://github.com/tathanhdinh/zydis-rs.git", branch = "add_get_version" }
