@@ -1,6 +1,5 @@
 #![allow(non_camel_case_types)]
 use zydis;
-use zydis::gen as zydisc;
 
 use structopt::StructOpt;
 use strum::{AsStaticRef, IntoEnumIterator};
@@ -100,6 +99,13 @@ struct Arg {
     detail: bool,
 
     #[structopt(
+        name = "asm_highlighting",
+        short = "l",
+        help = "Hilighting instructions"
+    )]
+    hilight: bool,
+
+    #[structopt(
         name = "verbosity",
         short = "v",
         long = "verbose",
@@ -113,6 +119,7 @@ pub(crate) struct DisasmArg {
     pub mode: MachineMode,
     pub address: u64,
     pub detail: bool,
+    pub hilight: bool,
     pub verbosity: u8,
     pub assembly: Vec<u8>,
 }
@@ -158,6 +165,7 @@ impl DisasmArg {
             mode: arg.mode,
             address: arg.address,
             detail: arg.detail,
+            hilight: arg.hilight,
             verbosity: arg.verbosity,
             assembly,
         })
