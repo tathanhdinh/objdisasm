@@ -1,10 +1,8 @@
-extern crate ansi_term;
 extern crate maplit;
 extern crate strum;
 extern crate tabwriter;
 extern crate zydis;
 
-#[macro_use]
 extern crate structopt;
 #[macro_use]
 extern crate failure;

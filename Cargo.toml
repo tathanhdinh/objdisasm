@@ -11,6 +11,5 @@ strum = "0.10.0"
 strum_macros = "0.10.0"
 maplit = "1.0.1"
 tabwriter = "1.1.0"
-ansi_term = "0.11.0"
-zydis = { git = "https://github.com/zyantific/zydis-rs.git", branch = "master" }
-# zydis = { git = "https://github.com/tathanhdinh/zydis-rs.git", branch = "add_get_version" }
+# zydis = { git = "https://github.com/zyantific/zydis-rs.git", tag = "v0.0.4" }
+zydis = { git = "https://github.com/tathanhdinh/zydis-rs.git", branch = "add_get_version" }

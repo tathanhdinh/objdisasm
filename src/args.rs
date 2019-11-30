@@ -99,13 +99,6 @@ struct Arg {
     detail: bool,
 
     #[structopt(
-        name = "asm_highlighting",
-        short = "l",
-        help = "Hilighting instructions"
-    )]
-    hilight: bool,
-
-    #[structopt(
         name = "verbosity",
         short = "v",
         long = "verbose",
@@ -119,7 +112,6 @@ pub(crate) struct DisasmArg {
     pub mode: MachineMode,
     pub address: u64,
     pub detail: bool,
-    pub hilight: bool,
     pub verbosity: u8,
     pub assembly: Vec<u8>,
 }
@@ -134,9 +126,9 @@ impl DisasmArg {
                 .as_bytes()
                 .iter()
                 .filter_map(|b| match b {
-                    b'0'...b'9' => Some(b - b'0'),
-                    b'a'...b'f' => Some(b - b'a' + 10),
-                    b'A'...b'F' => Some(b - b'A' + 10),
+                    b'0'..=b'9' => Some(b - b'0'),
+                    b'a'..=b'f' => Some(b - b'a' + 10),
+                    b'A'..=b'F' => Some(b - b'A' + 10),
                     _ => None,
                 }).fuse();
 
@@ -165,7 +157,6 @@ impl DisasmArg {
             mode: arg.mode,
             address: arg.address,
             detail: arg.detail,
-            hilight: arg.hilight,
             verbosity: arg.verbosity,
             assembly,
         })

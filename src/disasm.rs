@@ -1,4 +1,3 @@
-use ansi_term::Colour;
 use std::{
     fmt,
     io::{self, BufWriter, Write},
@@ -14,7 +13,6 @@ pub(self) struct Printer<'a, Bw: Write> {
     writer: TabWriter<Bw>,
     formatter: Formatter<'a>,
     verbosity: u8,
-    hilight: bool,
     inst_strings: Vec<String>,
 }
 
@@ -22,13 +20,14 @@ impl<'a, Bw> Printer<'a, Bw>
 where
     Bw: Write,
 {
-    fn new(verbosity: u8, hilight: bool, out: Bw) -> Result<Self> {
+    fn new(verbosity: u8, out: Bw) -> Result<Self> {
         let mut formatter =
             Formatter::new(zydisc::ZYDIS_FORMATTER_STYLE_INTEL).map_err(Error::Zydis)?;
         formatter
             .set_property(FormatterProperty::AddressFormat(
                 zydisc::ZYDIS_ADDR_FORMAT_RELATIVE_SIGNED,
-            )).map_err(Error::Zydis)?;
+            ))
+            .map_err(Error::Zydis)?;
         formatter
             .set_property(FormatterProperty::ForceMemseg(false))
             .map_err(Error::Zydis)?;
@@ -38,7 +37,8 @@ where
         formatter
             .set_property(FormatterProperty::ImmFormat(
                 zydisc::ZYDIS_IMM_FORMAT_HEX_SIGNED,
-            )).map_err(Error::Zydis)?;
+            ))
+            .map_err(Error::Zydis)?;
         formatter
             .set_property(FormatterProperty::Uppercase(false))
             .map_err(Error::Zydis)?;
@@ -59,7 +59,6 @@ where
             writer: TabWriter::new(out).padding(8),
             formatter,
             verbosity,
-            hilight,
             inst_strings: vec![],
         })
     }
@@ -74,22 +73,18 @@ where
                 .collect::<Vec<_>>()
                 .join(" ")[..];
 
-            let inst_str: Box<fmt::Display> = {
+            let inst_str: Box<dyn fmt::Display> = {
                 let inst_str = self
                     .formatter
                     .format_instruction(inst, 100, None)
                     .map_err(Error::Zydis)?;
-                if self.hilight {
-                    Box::new(Colour::RGB(66, 158, 244).paint(inst_str))
-                } else {
-                    Box::new(inst_str)
-                }
+
+                Box::new(inst_str)
             };
 
             match self.verbosity {
                 0 => format!("{}", inst_str),
                 1 => format!("0x{:x}\t{}", addr, inst_str),
-                // _ => format!("0x{:016x}\t{:45}\t{}", addr, inst_bytes_str, inst_str),
                 _ => format!("0x{:x}\t{}\t{}", addr, inst_bytes_str, inst_str),
             }
         };
@@ -101,7 +96,7 @@ where
 
     fn show(&mut self) -> Result<()> {
         let all_inst_strings = self.inst_strings.join("\n");
-        writeln!(self.writer, "{}", &all_inst_strings);
+        writeln!(self.writer, "{}", &all_inst_strings).map_err(Error::Io)?;
         self.writer.flush().map_err(Error::Io)
     }
 }
@@ -109,7 +104,6 @@ where
 pub(super) struct Disassembler {
     decoder: Decoder,
     verbosity: u8,
-    hilight: bool,
 }
 
 impl Disassembler {
@@ -124,41 +118,19 @@ impl Disassembler {
                 zydisc::ZYDIS_MACHINE_MODE_LONG_64,
                 zydisc::ZYDIS_ADDRESS_WIDTH_64,
             ),
-        }.map_err(Error::Zydis)?;
-
-        let mut formatter =
-            Formatter::new(zydisc::ZYDIS_FORMATTER_STYLE_INTEL).map_err(Error::Zydis)?;
-        formatter
-            .set_property(FormatterProperty::AddressFormat(
-                zydisc::ZYDIS_ADDR_FORMAT_RELATIVE_SIGNED,
-            )).map_err(Error::Zydis)?;
-        formatter
-            .set_property(FormatterProperty::Uppercase(false))
-            .map_err(Error::Zydis)?;
-        formatter
-            .set_property(FormatterProperty::HexUppercase(false))
-            .map_err(Error::Zydis)?;
-        formatter
-            .set_property(FormatterProperty::HexPaddingAddr(0))
-            .map_err(Error::Zydis)?;
-        formatter
-            .set_property(FormatterProperty::HexPaddingDisp(0))
-            .map_err(Error::Zydis)?;
-        formatter
-            .set_property(FormatterProperty::HexPaddingImm(0))
-            .map_err(Error::Zydis)?;
+        }
+        .map_err(Error::Zydis)?;
 
         Ok(Disassembler {
             decoder,
             verbosity: arg.verbosity,
-            hilight: arg.hilight,
         })
     }
 
     pub fn disasm(&mut self, code: &[u8], address: u64) -> Result<()> {
         let stdout = io::stdout();
         let stdout = BufWriter::new(stdout.lock());
-        let mut printer = Printer::new(self.verbosity, self.hilight, stdout)?;
+        let mut printer = Printer::new(self.verbosity, stdout)?;
 
         self.decoder
             .instruction_iterator(code, address)
